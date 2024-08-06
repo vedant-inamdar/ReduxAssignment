@@ -23,11 +23,12 @@ const Calculator = () => {
     }
   };
 
+  //Local url: "http://localhost:8080/api/logs"
   const evaluate = async () => {
     try {
       const res = eval(expression); // Evaluate expression
       setExpression(res.toString()); // Update expression to display the result
-      await axios.post("http://localhost:8080/api/logs", {
+      await axios.post("https://calculator-sf9f.onrender.com/api/logs", {
         expression: expression,
         isValid: true,
         output: res,
@@ -35,7 +36,7 @@ const Calculator = () => {
       fetchLogs();
     } catch (error) {
       setExpression("Error");
-      await axios.post("http://localhost:8080/api/logs", {
+      await axios.post("https://calculator-sf9f.onrender.com/api/logs", {
         expression: expression,
         isValid: false,
         output: null,
@@ -46,7 +47,9 @@ const Calculator = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/logs");
+      const res = await axios.get(
+        "https://calculator-sf9f.onrender.com/api/logs"
+      );
       setLogs(res.data);
     } catch (error) {
       console.error("Error fetching logs:", error);
