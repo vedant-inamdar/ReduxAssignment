@@ -19,7 +19,7 @@ const LogTable = ({ logs }) => {
           {logs.map((log, index) => (
             <tr key={log._id}>
               {/* <td>{log._id}</td> */}
-              <td>{index+1}</td>
+              <td>{index + 1}</td>
               <td>{log.expression}</td>
               <td>{log.isValid ? "Yes" : "No"}</td>
               <td>{log.output !== null ? log.output : "N/A"}</td>

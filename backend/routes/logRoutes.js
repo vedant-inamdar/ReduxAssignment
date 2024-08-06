@@ -58,7 +58,7 @@ router.get(
   "/logs",
   handleDbOperation(async (req, res) => {
     const logs = await CalculatorLog.find()
-      .sort({ createdOn: 1 }) // Sort by creation date in descending order
+      .sort({ createdOn: -1 }) // Sort by creation date in descending order
       .limit(10) // Limit to the latest 10 entries
       .exec();
 
