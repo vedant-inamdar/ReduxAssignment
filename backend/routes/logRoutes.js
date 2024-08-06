@@ -5,7 +5,7 @@ const logger = require("../config/logger");
 
 const router = express.Router();
 
-//function handle database operations
+// Middleware to handle database operations
 const handleDbOperation = (operation) => async (req, res, next) => {
   try {
     await operation(req, res);
@@ -15,27 +15,31 @@ const handleDbOperation = (operation) => async (req, res, next) => {
   }
 };
 
+// Route to log a new calculator expression
 router.post(
   "/logs",
   handleDbOperation(async (req, res) => {
     const { expression } = req.body;
+
     if (!expression) {
       logger.info("Received an empty expression");
       return res.status(400).json({ message: "Expression is empty" });
     }
+
     let output = null;
     let isValid = true;
+
     try {
+      // Evaluate the expression
       output = math.evaluate(expression);
       output = parseFloat(output.toFixed(2)); // Format to 2 decimal places
-      isValid = true;
     } catch (err) {
       isValid = false;
       logger.warn(`Invalid expression attempted: ${expression}`);
     }
 
+    // Create a new log entry
     const calculatorLog = new CalculatorLog({ expression, isValid, output });
-    // console.log(calculatorLog);
     await calculatorLog.save();
     logger.info(`Expression logged: ${expression} | Valid: ${isValid}`);
 
@@ -49,14 +53,15 @@ router.post(
   })
 );
 
-// latest 10 calculator logs
+// Route to fetch the latest 10 calculator logs
 router.get(
   "/logs",
   handleDbOperation(async (req, res) => {
     const logs = await CalculatorLog.find()
-      .sort({ createdOn: -1 })
-      .limit(10)
+      .sort({ createdOn: -1 }) // Sort by creation date in descending order
+      .limit(10) // Limit to the latest 10 entries
       .exec();
+
     logger.info("Successfully retrieved logs");
     res.json(logs);
   })
