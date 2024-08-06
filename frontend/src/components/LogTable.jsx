@@ -7,7 +7,8 @@ const LogTable = ({ logs }) => {
       <table>
         <thead>
           <tr>
-            <th>ID</th>
+            {/* <th>ID</th> */}
+            <th>Sr No.</th>
             <th>Expression</th>
             <th>Valid</th>
             <th>Output</th>
@@ -15,9 +16,10 @@ const LogTable = ({ logs }) => {
           </tr>
         </thead>
         <tbody>
-          {logs.map((log) => (
+          {logs.map((log, index) => (
             <tr key={log._id}>
-              <td>{log._id}</td>
+              {/* <td>{log._id}</td> */}
+              <td>{index+1}</td>
               <td>{log.expression}</td>
               <td>{log.isValid ? "Yes" : "No"}</td>
               <td>{log.output !== null ? log.output : "N/A"}</td>
