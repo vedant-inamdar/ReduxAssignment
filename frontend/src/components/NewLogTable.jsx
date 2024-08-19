@@ -4,13 +4,19 @@ import { FaSearch } from "react-icons/fa";
 import "./LogTable.css";
 
 const NewLogTable = ({ refresh, onDelete }) => {
+  // State to hold the full list of logs
   const [logs, setLogs] = useState([]);
+  // State to hold all fetched logs
   const [allLogs, setAllLogs] = useState([]);
+  // State to track selected row IDs
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  // State to hold filter criteria
   const [filters, setFilters] = useState({});
+  // State to manage current page and pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  // State to manage which search inputs are active
   const [searchStates, setSearchStates] = useState({
     expression: false,
     isValid: false,
@@ -18,6 +24,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
     createdOn: false,
   });
 
+  // Fetch logs when the component mounts or refresh is triggered
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -36,6 +43,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
     fetchLogs();
   }, [refresh]);
 
+  // Filter logs based on the current filters
   useEffect(() => {
     const filtered = allLogs.filter((log) =>
       Object.keys(filters).every((key) => {
@@ -64,6 +72,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
     setCurrentPage(1);
   }, [filters, allLogs]);
 
+  // Handle changes to filter inputs
   const handleFilterChange = (value, key) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -71,6 +80,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
     }));
   };
 
+  // Handle log deletion
   const handleDelete = async () => {
     try {
       await axios.delete("http://localhost:8080/api/logs", {
@@ -85,10 +95,12 @@ const NewLogTable = ({ refresh, onDelete }) => {
     }
   };
 
+  // Handle page changes for pagination
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
+  // Handle selection of all rows on the current page
   const handleSelectAll = (e) => {
     const checked = e.target.checked;
     const newSelectedRowKeys = checked
@@ -97,6 +109,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
 
+  // Handle individual row selection
   const handleCheckboxChange = (e, logId) => {
     const checked = e.target.checked;
     const newSelectedRowKeys = checked
@@ -105,17 +118,20 @@ const NewLogTable = ({ refresh, onDelete }) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
 
+  // Get logs for the current page
   const paginatedLogs = logs.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
+  // Calculate total number of pages for pagination
   const totalPages = Math.ceil(total / pageSize);
   const pageNumbers = [];
   for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
 
+  // Determine which page numbers to display in pagination
   const getVisiblePageNumbers = () => {
     const maxPagesToShow = 5; // Number of page buttons to display at once
     const pages = [];
@@ -144,6 +160,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
     return pages;
   };
 
+  // Toggle the visibility of search input fields
   const toggleSearchInput = (key) => {
     setSearchStates((prev) => ({
       ...Object.keys(prev).reduce((acc, currentKey) => {
