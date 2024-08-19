@@ -1,0 +1,222 @@
+/*
+  The checkboxes in your Table component are managed by the rowSelection property.
+  Here row selection is set up but haven't explicitly defined a column for checkboxes.
+  The checkboxes are part of Ant Design's Table component and are automatically included when we use the rowSelection prop.
+  The rowSelection prop in the Table component is used to manage row selection, which includes rendering checkboxes in the table's first column.
+    rowSelection is configured with:
+      selectedRowKeys: An array of keys representing the rows that are currently selected.
+      onChange: A callback function that updates the state when the selected rows change.
+  So the actual checkboxes are automatically rendered by Ant Design's Table component in the first column of the table,
+  but we didn't specify a rowSelection column explicitly.
+
+*/
+
+import React, { useState, useEffect } from "react";
+import { Table, Input, Space, Button, message } from "antd";
+import { FilterOutlined, DeleteOutlined } from "@ant-design/icons";
+import axios from "axios";
+import "./LogTable.css";
+
+const NewLogTable = ({ refresh, onDelete }) => {
+  // State to hold the logs to be displayed in the table
+  const [logs, setLogs] = useState([]);
+  // State to hold all logs fetched from the server for client-side filtering
+  const [allLogs, setAllLogs] = useState([]);
+  // State to track the selected row keys (IDs) for batch actions like delete
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  // State to store current filter values
+  const [filters, setFilters] = useState({});
+  // State to manage pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0); // Total number of logs for pagination
+
+  useEffect(() => {
+    // Fetch logs from the server when the component mounts or refresh state changes
+    const fetchLogs = async () => {
+      try {
+        // Request logs from the server
+        const res = await axios.get("http://localhost:8080/api/logs", {
+          params: {
+            page: 1, // Start from the first page
+            limit: 10000, // Request a large number of logs to handle filtering on the client side
+          },
+        });
+        setAllLogs(res.data.logs || []); // Save all logs to state
+      } catch (error) {
+        console.error("Error fetching logs:", error); // Log errors to the console
+      }
+    };
+
+    fetchLogs();
+  }, [refresh]); // Depend on `refresh` to fetch logs again if needed
+
+  useEffect(() => {
+    // Apply filtering whenever filters or allLogs change
+    const filtered = allLogs.filter((log) =>
+      Object.keys(filters).every((key) => {
+        if (!filters[key]) return true; // Skip filtering if no filter is set for this key
+        if (key === "isValid") {
+          // Filter by boolean value
+          return log[key] === (filters[key] === "yes" ? true : false);
+        }
+        if (key === "output") {
+          // Handle filtering for output field, ensuring numeric values are handled
+          const filterValue = parseFloat(filters[key]);
+          const logValue = parseFloat(log[key]);
+          return !isNaN(filterValue)
+            ? logValue === filterValue
+            : (log[key] || "").toString().toLowerCase().includes(filters[key]);
+        }
+        if (key === "createdOn") {
+          // Handle date filtering
+          const filterValue = filters[key];
+          const logDate = new Date(log[key]);
+          const logDateStr = logDate.toLocaleDateString(); // Convert to a readable date format
+          return logDateStr.includes(filterValue);
+        }
+        // General string filtering
+        return (log[key] || "").toString().toLowerCase().includes(filters[key]);
+      })
+    );
+    setLogs(filtered); // Set the filtered logs to display
+    setTotal(filtered.length); // Update total count for pagination
+    setCurrentPage(1); // Reset to page 1 when filters change
+  }, [filters, allLogs]); // Depend on filters and allLogs to reapply filtering
+
+  // Handle filter input changes
+  const handleFilterChange = (value, key) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [key]: value.toLowerCase(),
+    }));
+  };
+
+  // Define table columns
+  const columns = [
+    {
+      title: (
+        <Space>
+          Expression
+          <Input
+            placeholder="Filter"
+            onChange={(e) => handleFilterChange(e.target.value, "expression")}
+            suffix={<FilterOutlined />}
+          />
+        </Space>
+      ),
+      dataIndex: "expression",
+      key: "expression",
+      width: 200,
+    },
+    {
+      title: (
+        <Space>
+          Valid
+          <Input
+            placeholder="Filter (yes/no)"
+            onChange={(e) => handleFilterChange(e.target.value, "isValid")}
+            suffix={<FilterOutlined />}
+          />
+        </Space>
+      ),
+      dataIndex: "isValid",
+      key: "isValid",
+      width: 200,
+      render: (isValid) => (isValid ? "Yes" : "No"), // Render boolean as Yes/No
+    },
+    {
+      title: (
+        <Space>
+          Output
+          <Input
+            placeholder="Filter"
+            onChange={(e) => handleFilterChange(e.target.value, "output")}
+            suffix={<FilterOutlined />}
+          />
+        </Space>
+      ),
+      dataIndex: "output",
+      key: "output",
+      width: 200,
+    },
+    {
+      title: (
+        <Space>
+          Created
+          <Input
+            placeholder="Filter (e.g., 8/13)"
+            onChange={(e) => handleFilterChange(e.target.value, "createdOn")}
+            suffix={<FilterOutlined />}
+          />
+        </Space>
+      ),
+      dataIndex: "createdOn",
+      key: "createdOn",
+      width: 200,
+      render: (createdOn) => new Date(createdOn).toLocaleString(), // Render date as a string
+    },
+  ];
+
+  // Configure pagination settings
+  const paginationConfig = {
+    current: currentPage,
+    pageSize: pageSize,
+    total: total,
+    onChange: (page, size) => {
+      setCurrentPage(page); // Update current page
+      setPageSize(size); // Update page size
+    },
+    showSizeChanger: true, // Allow user to change page size
+    pageSizeOptions: ["10", "20", "50", "100"], // Options for page sizes
+  };
+
+  // Handle deletion of selected logs
+  const handleDelete = async () => {
+    try {
+      await axios.delete("http://localhost:8080/api/logs", {
+        data: { ids: selectedRowKeys }, // Send IDs of selected logs to delete
+      });
+      setSelectedRowKeys([]); // Clear selected rows after deletion
+      message.success("Logs deleted successfully"); // Show success message
+      onDelete(); // Trigger parent component's refresh action
+    } catch (error) {
+      console.error("Error deleting logs:", error); // Log errors to the console
+      message.error("Error deleting logs"); // Show error message
+    }
+  };
+
+  // Paginate logs for the current page
+  const paginatedLogs = logs.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  return (
+    <div id="table">
+      {/* Button to delete selected logs */}
+      <Button
+        type="danger"
+        icon={<DeleteOutlined />}
+        disabled={selectedRowKeys.length === 0}
+        onClick={handleDelete}
+      >
+        Delete
+      </Button>
+      {/* Ant Design Table component to display logs */}
+      <Table
+        rowKey="_id" // Unique key for each row
+        columns={columns} // Define table columns
+        dataSource={paginatedLogs} // Data to be displayed in the table
+        rowSelection={{
+          selectedRowKeys, // Array of selected row keys
+          onChange: setSelectedRowKeys, // Update selected row keys
+        }}
+        pagination={paginationConfig} // Pagination configuration
+        size="small" // Small table size
+      />
+    </div>
+  );
+};
+
+export default NewLogTable;

@@ -1,69 +1,69 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import "./Calculator.css";
-import LogTable from "./LogTable";
+import NewLogTable from "./NewLogTable";
 
 const Calculator = () => {
+  // State to manage the current expression displayed on the calculator
   const [expression, setExpression] = useState("");
-  const [logs, setLogs] = useState([]);
+  // State to trigger a refresh of the logs in NewLogTable component
+  const [refreshLogs, setRefreshLogs] = useState(false);
 
+  // Function to handle button clicks
   const handleClick = (value) => {
     if (!isNaN(value) || value === ".") {
+      // If the value is a number or a decimal point, add it to the expression
       setExpression((prev) => prev + value);
     } else if (value === "AC") {
+      // If "AC" is clicked, clear the expression
       setExpression("");
     } else if (value === "DEL") {
+      // If "DEL" is clicked, remove the last character from the expression
       setExpression((prev) => prev.slice(0, -1));
     } else if (value === "=") {
+      // If "=" is clicked, evaluate the expression
       evaluate();
     } else {
+      // If an operator is clicked and the last character is a number, add the operator
       if (expression && !isNaN(expression.slice(-1))) {
         setExpression((prev) => prev + value);
       }
     }
   };
 
-  //Local url: "http://localhost:8080/api/logs"
+  // Function to evaluate the expression and handle API calls
   const evaluate = async () => {
     try {
-      const res = eval(expression); // Evaluate expression
-      setExpression(res.toString()); // Update expression to display the result
-      await axios.post("https://calculator-sf9f.onrender.com/api/logs", {
+      // Evaluate the expression using JavaScript's eval function
+      const res = eval(expression);
+      setExpression(res.toString()); // Update the expression with the result
+      // Log the valid expression and result to the backend
+      await axios.post("http://localhost:8080/api/logs", {
         expression: expression,
         isValid: true,
         output: res,
       });
-      fetchLogs();
+      // Trigger a refresh of the logs in NewLogTable component
+      setRefreshLogs((prev) => !prev);
     } catch (error) {
+      // If there's an error in evaluation, display "Error"
       setExpression("Error");
-      await axios.post("https://calculator-sf9f.onrender.com/api/logs", {
+      // Log the invalid expression attempt to the backend
+      await axios.post("http://localhost:8080/api/logs", {
         expression: expression,
         isValid: false,
         output: null,
       });
-      fetchLogs();
+      // Trigger a refresh of the logs in NewLogTable component
+      setRefreshLogs((prev) => !prev);
     }
   };
-
-  const fetchLogs = async () => {
-    try {
-      const res = await axios.get(
-        "https://calculator-sf9f.onrender.com/api/logs"
-      );
-      setLogs(res.data);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchLogs();
-  }, []);
 
   return (
     <div className="holder">
       <div className="calculator">
         <div className="display">
+          {/* Display the current expression */}
           <input
             type="text"
             className="display-input"
@@ -72,6 +72,7 @@ const Calculator = () => {
           />
         </div>
         <div className="buttons">
+          {/* Calculator buttons with onClick handlers */}
           <button className="button operator" onClick={() => handleClick("AC")}>
             AC
           </button>
@@ -141,7 +142,11 @@ const Calculator = () => {
         </div>
       </div>
       <div className="logtable">
-        <LogTable logs={logs} />
+        {/* NewLogTable component to display and manage logs */}
+        <NewLogTable
+          refresh={refreshLogs}
+          onDelete={() => setRefreshLogs((prev) => !prev)}
+        />
       </div>
     </div>
   );
