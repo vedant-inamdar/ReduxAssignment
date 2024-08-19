@@ -1,47 +1,138 @@
-/* General table styling */
+/* General container styling */
 #table {
-  margin-top: 40px;
+  margin: 20px;
+  font-family: Arial, sans-serif;
+  position: relative;
+  width: 130%; /* Adjust this if needed */
 }
 
-/* Ensure full-width and proper collapse */
+/* Table styling */
 table {
-  /* width: 100%; */
+  width: 100%;
   border-collapse: collapse;
-  background-color: lightgrey;
-  border-radius: 8px;
+  border-radius: 9px;
+  overflow: hidden;
 }
 
-/* Adjust padding and font size */
-th,
-td {
-  padding: 5px; /* Reduced padding */
+/* Table header styling */
+thead th {
+  background-color: black;
+  color: white;
+  padding: 12px;
   text-align: left;
-  font-size: 12px; /* Reduced font size */
+  font-size: 15px;
+  position: relative; /* To position search icon inside header cell */
 }
 
-th {
-  background-color: rgb(90, 90, 90);
+/* Table cell styling */
+td {
+  padding: 12px;
+  text-align: left;
+  font-size: 15px;
+  border-bottom: 1px solid grey;
+}
+
+tbody tr:hover {
+  background-color: lightgrey;
+}
+
+/* Actions and pagination styling */
+.actions {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions button {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: white;
+  background-color: red;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.actions button:hover {
+  background-color: darkred;
+}
+
+/* Pagination styling */
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid lightgrey;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
+  background-color: white;
+  color: black;
+  margin: 0 3px;
+}
+
+.pagination button:hover {
+  background-color: green;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  background-color: lightgrey;
   color: white;
 }
 
-/* Ant Design specific table styles */
-.ant-table-thead > tr > th {
-  background: #f5f5f5; /* Light background for header */
-  color: black; /* Ensure text color is visible */
-  font-size: 15px; /* Reduced font size */
+.page-number span {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid lightgrey;
+  border-radius: 4px;
+  color: blue;
+  cursor: default;
 }
 
-.ant-table-cell {
-  padding: 5px; /* Reduced padding */
-  font-size: 15px; /* Reduced font size */
+.page-number span.active {
+  background-color: blue;
+  color: white;
+  border-color: blue;
 }
 
-.ant-table-pagination {
-  margin-top: 16px;
-  text-align: center;
+/* Container for the search icon and input */
+.search-container {
+  position: relative;
+  display: inline-block; /* Ensure container does not affect table layout */
+  margin: 0 6px;
 }
 
-/* Highlight row on hover */
-.ant-table-tbody tr:hover {
-  background: #f5f5f5;
+/* Search icon styling */
+.search-icon {
+  font-size: 16px;
+  cursor: pointer;
+  color: grey;
+}
+
+/* Search input styling */
+.search-container input {
+  padding: 6px;
+  font-size: 14px;
+  border: 1px solid lightgrey;
+  border-radius: 4px;
+  width: 150px; /* Fixed width for consistency */
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 100%; /* Position input below the header cell */
+  left: 0; /* Align input with the left edge of the header cell */
+  z-index: 10; /* Ensure input is above other elements */
+}
+
+/* Show search input when active */
+.search-container.active input {
+  display: block;
 }

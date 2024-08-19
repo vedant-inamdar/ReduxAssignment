@@ -1,90 +1,69 @@
-/*
-  The checkboxes in your Table component are managed by the rowSelection property.
-  Here row selection is set up but haven't explicitly defined a column for checkboxes.
-  The checkboxes are part of Ant Design's Table component and are automatically included when we use the rowSelection prop.
-  The rowSelection prop in the Table component is used to manage row selection, which includes rendering checkboxes in the table's first column.
-    rowSelection is configured with:
-      selectedRowKeys: An array of keys representing the rows that are currently selected.
-      onChange: A callback function that updates the state when the selected rows change.
-  So the actual checkboxes are automatically rendered by Ant Design's Table component in the first column of the table,
-  but we didn't specify a rowSelection column explicitly.
-
-*/
-
 import React, { useState, useEffect } from "react";
-import { Table, Input, Space, Button, message } from "antd";
-import { FilterOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
+import { FaSearch } from "react-icons/fa";
 import "./LogTable.css";
 
 const NewLogTable = ({ refresh, onDelete }) => {
-  // State to hold the logs to be displayed in the table
   const [logs, setLogs] = useState([]);
-  // State to hold all logs fetched from the server for client-side filtering
   const [allLogs, setAllLogs] = useState([]);
-  // State to track the selected row keys (IDs) for batch actions like delete
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  // State to store current filter values
   const [filters, setFilters] = useState({});
-  // State to manage pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0); // Total number of logs for pagination
+  const [total, setTotal] = useState(0);
+  const [searchStates, setSearchStates] = useState({
+    expression: false,
+    isValid: false,
+    output: false,
+    createdOn: false,
+  });
 
   useEffect(() => {
-    // Fetch logs from the server when the component mounts or refresh state changes
     const fetchLogs = async () => {
       try {
-        // Request logs from the server
         const res = await axios.get("http://localhost:8080/api/logs", {
           params: {
-            page: 1, // Start from the first page
-            limit: 10000, // Request a large number of logs to handle filtering on the client side
+            page: 1,
+            limit: 10000,
           },
         });
-        setAllLogs(res.data.logs || []); // Save all logs to state
+        setAllLogs(res.data.logs || []);
       } catch (error) {
-        console.error("Error fetching logs:", error); // Log errors to the console
+        console.error("Error fetching logs:", error);
       }
     };
 
     fetchLogs();
-  }, [refresh]); // Depend on `refresh` to fetch logs again if needed
+  }, [refresh]);
 
   useEffect(() => {
-    // Apply filtering whenever filters or allLogs change
     const filtered = allLogs.filter((log) =>
       Object.keys(filters).every((key) => {
-        if (!filters[key]) return true; // Skip filtering if no filter is set for this key
+        if (!filters[key]) return true;
         if (key === "isValid") {
-          // Filter by boolean value
           return log[key] === (filters[key] === "yes" ? true : false);
         }
         if (key === "output") {
-          // Handle filtering for output field, ensuring numeric values are handled
           const filterValue = parseFloat(filters[key]);
           const logValue = parseFloat(log[key]);
           return !isNaN(filterValue)
             ? logValue === filterValue
-            : (log[key] || "").toString().toLowerCase().includes(filters[key]);
+            : (log[key] || "").toLowerCase().includes(filters[key]);
         }
         if (key === "createdOn") {
-          // Handle date filtering
           const filterValue = filters[key];
           const logDate = new Date(log[key]);
-          const logDateStr = logDate.toLocaleDateString(); // Convert to a readable date format
+          const logDateStr = logDate.toLocaleDateString();
           return logDateStr.includes(filterValue);
         }
-        // General string filtering
         return (log[key] || "").toString().toLowerCase().includes(filters[key]);
       })
     );
-    setLogs(filtered); // Set the filtered logs to display
-    setTotal(filtered.length); // Update total count for pagination
-    setCurrentPage(1); // Reset to page 1 when filters change
-  }, [filters, allLogs]); // Depend on filters and allLogs to reapply filtering
+    setLogs(filtered);
+    setTotal(filtered.length);
+    setCurrentPage(1);
+  }, [filters, allLogs]);
 
-  // Handle filter input changes
   const handleFilterChange = (value, key) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -92,129 +71,254 @@ const NewLogTable = ({ refresh, onDelete }) => {
     }));
   };
 
-  // Define table columns
-  const columns = [
-    {
-      title: (
-        <Space>
-          Expression
-          <Input
-            placeholder="Filter"
-            onChange={(e) => handleFilterChange(e.target.value, "expression")}
-            suffix={<FilterOutlined />}
-          />
-        </Space>
-      ),
-      dataIndex: "expression",
-      key: "expression",
-      width: 200,
-    },
-    {
-      title: (
-        <Space>
-          Valid
-          <Input
-            placeholder="Filter (yes/no)"
-            onChange={(e) => handleFilterChange(e.target.value, "isValid")}
-            suffix={<FilterOutlined />}
-          />
-        </Space>
-      ),
-      dataIndex: "isValid",
-      key: "isValid",
-      width: 200,
-      render: (isValid) => (isValid ? "Yes" : "No"), // Render boolean as Yes/No
-    },
-    {
-      title: (
-        <Space>
-          Output
-          <Input
-            placeholder="Filter"
-            onChange={(e) => handleFilterChange(e.target.value, "output")}
-            suffix={<FilterOutlined />}
-          />
-        </Space>
-      ),
-      dataIndex: "output",
-      key: "output",
-      width: 200,
-    },
-    {
-      title: (
-        <Space>
-          Created
-          <Input
-            placeholder="Filter (e.g., 8/13)"
-            onChange={(e) => handleFilterChange(e.target.value, "createdOn")}
-            suffix={<FilterOutlined />}
-          />
-        </Space>
-      ),
-      dataIndex: "createdOn",
-      key: "createdOn",
-      width: 200,
-      render: (createdOn) => new Date(createdOn).toLocaleString(), // Render date as a string
-    },
-  ];
-
-  // Configure pagination settings
-  const paginationConfig = {
-    current: currentPage,
-    pageSize: pageSize,
-    total: total,
-    onChange: (page, size) => {
-      setCurrentPage(page); // Update current page
-      setPageSize(size); // Update page size
-    },
-    showSizeChanger: true, // Allow user to change page size
-    pageSizeOptions: ["10", "20", "50", "100"], // Options for page sizes
-  };
-
-  // Handle deletion of selected logs
   const handleDelete = async () => {
     try {
       await axios.delete("http://localhost:8080/api/logs", {
-        data: { ids: selectedRowKeys }, // Send IDs of selected logs to delete
+        data: { ids: selectedRowKeys },
       });
-      setSelectedRowKeys([]); // Clear selected rows after deletion
-      message.success("Logs deleted successfully"); // Show success message
-      onDelete(); // Trigger parent component's refresh action
+      setSelectedRowKeys([]);
+      alert("Logs deleted successfully");
+      onDelete();
     } catch (error) {
-      console.error("Error deleting logs:", error); // Log errors to the console
-      message.error("Error deleting logs"); // Show error message
+      console.error("Error deleting logs:", error);
+      alert("Error deleting logs");
     }
   };
 
-  // Paginate logs for the current page
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleSelectAll = (e) => {
+    const checked = e.target.checked;
+    const newSelectedRowKeys = checked
+      ? paginatedLogs.map((log) => log._id)
+      : [];
+    setSelectedRowKeys(newSelectedRowKeys);
+  };
+
+  const handleCheckboxChange = (e, logId) => {
+    const checked = e.target.checked;
+    const newSelectedRowKeys = checked
+      ? [...selectedRowKeys, logId]
+      : selectedRowKeys.filter((key) => key !== logId);
+    setSelectedRowKeys(newSelectedRowKeys);
+  };
+
   const paginatedLogs = logs.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
+  const totalPages = Math.ceil(total / pageSize);
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
+  const getVisiblePageNumbers = () => {
+    const maxPagesToShow = 5; // Number of page buttons to display at once
+    const pages = [];
+    const halfMaxPages = Math.floor(maxPagesToShow / 2);
+    let start = Math.max(1, currentPage - halfMaxPages);
+    let end = Math.min(totalPages, currentPage + halfMaxPages);
+
+    if (currentPage - halfMaxPages < 1) {
+      end = Math.min(maxPagesToShow, totalPages);
+    }
+
+    if (currentPage + halfMaxPages > totalPages) {
+      start = Math.max(1, totalPages - maxPagesToShow + 1);
+    }
+
+    if (start > 1) pages.push(1);
+    if (start > 2) pages.push("...");
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (end < totalPages - 1) pages.push("...");
+    if (end < totalPages) pages.push(totalPages);
+
+    return pages;
+  };
+
+  const toggleSearchInput = (key) => {
+    setSearchStates((prev) => ({
+      ...Object.keys(prev).reduce((acc, currentKey) => {
+        acc[currentKey] = currentKey === key ? !prev[currentKey] : false;
+        return acc;
+      }, {}),
+    }));
+  };
+
   return (
     <div id="table">
-      {/* Button to delete selected logs */}
-      <Button
-        type="danger"
-        icon={<DeleteOutlined />}
-        disabled={selectedRowKeys.length === 0}
-        onClick={handleDelete}
-      >
-        Delete
-      </Button>
-      {/* Ant Design Table component to display logs */}
-      <Table
-        rowKey="_id" // Unique key for each row
-        columns={columns} // Define table columns
-        dataSource={paginatedLogs} // Data to be displayed in the table
-        rowSelection={{
-          selectedRowKeys, // Array of selected row keys
-          onChange: setSelectedRowKeys, // Update selected row keys
-        }}
-        pagination={paginationConfig} // Pagination configuration
-        size="small" // Small table size
-      />
+      <div className="actions">
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={selectedRowKeys.length === 0}
+        >
+          Delete Selected
+        </button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>
+              <input
+                type="checkbox"
+                onChange={handleSelectAll}
+                checked={
+                  selectedRowKeys.length === paginatedLogs.length &&
+                  paginatedLogs.length > 0
+                }
+              />
+            </th>
+            <th>
+              Expression
+              <div
+                className={`search-container ${
+                  searchStates.expression ? "active" : ""
+                }`}
+              >
+                <FaSearch
+                  className="search-icon"
+                  onClick={() => toggleSearchInput("expression")}
+                />
+                {searchStates.expression && (
+                  <input
+                    placeholder="Filter"
+                    onChange={(e) =>
+                      handleFilterChange(e.target.value, "expression")
+                    }
+                  />
+                )}
+              </div>
+            </th>
+            <th>
+              Valid
+              <div
+                className={`search-container ${
+                  searchStates.isValid ? "active" : ""
+                }`}
+              >
+                <FaSearch
+                  className="search-icon"
+                  onClick={() => toggleSearchInput("isValid")}
+                />
+                {searchStates.isValid && (
+                  <input
+                    placeholder="Filter (yes/no)"
+                    onChange={(e) =>
+                      handleFilterChange(e.target.value, "isValid")
+                    }
+                  />
+                )}
+              </div>
+            </th>
+            <th>
+              Output
+              <div
+                className={`search-container ${
+                  searchStates.output ? "active" : ""
+                }`}
+              >
+                <FaSearch
+                  className="search-icon"
+                  onClick={() => toggleSearchInput("output")}
+                />
+                {searchStates.output && (
+                  <input
+                    placeholder="Filter"
+                    onChange={(e) =>
+                      handleFilterChange(e.target.value, "output")
+                    }
+                  />
+                )}
+              </div>
+            </th>
+            <th>
+              Created
+              <div
+                className={`search-container ${
+                  searchStates.createdOn ? "active" : ""
+                }`}
+              >
+                <FaSearch
+                  className="search-icon"
+                  onClick={() => toggleSearchInput("createdOn")}
+                />
+                {searchStates.createdOn && (
+                  <input
+                    placeholder="Filter (e.g., 8/13)"
+                    onChange={(e) =>
+                      handleFilterChange(e.target.value, "createdOn")
+                    }
+                  />
+                )}
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedLogs.map((log) => (
+            <tr key={log._id}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={selectedRowKeys.includes(log._id)}
+                  onChange={(e) => handleCheckboxChange(e, log._id)}
+                />
+              </td>
+              <td>{log.expression}</td>
+              <td>{log.isValid ? "Yes" : "No"}</td>
+              <td>{log.output}</td>
+              <td>{new Date(log.createdOn).toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="pagination">
+        <button
+          onClick={() => handlePageChange(1)}
+          disabled={currentPage === 1}
+        >
+          First
+        </button>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        {getVisiblePageNumbers().map((page, index) => (
+          <div
+            key={index}
+            className={`page-number ${page === currentPage ? "active" : ""}`}
+          >
+            {page === "..." ? (
+              <span>{page}</span>
+            ) : (
+              <button onClick={() => handlePageChange(page)}>{page}</button>
+            )}
+          </div>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
+        <button
+          onClick={() => handlePageChange(totalPages)}
+          disabled={currentPage === totalPages}
+        >
+          Last
+        </button>
+      </div>
     </div>
   );
 };
