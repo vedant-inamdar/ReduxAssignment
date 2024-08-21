@@ -3,7 +3,7 @@
   margin: 20px;
   font-family: Arial, sans-serif;
   position: relative;
-  width: 130%; /* Adjust this if needed */
+  width: 135%; /* Adjust this if needed */
 }
 
 /* Table styling */
@@ -18,7 +18,7 @@ table {
 thead th {
   background-color: black;
   color: white;
-  padding: 12px;
+  padding: 18px;
   text-align: left;
   font-size: 15px;
   position: relative; /* To position search icon inside header cell */

@@ -4,27 +4,27 @@ import { FaSearch } from "react-icons/fa";
 import "./LogTable.css";
 
 const NewLogTable = ({ refresh, onDelete }) => {
-  // State to hold the full list of logs
   const [logs, setLogs] = useState([]);
-  // State to hold all fetched logs
   const [allLogs, setAllLogs] = useState([]);
-  // State to track selected row IDs
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  // State to hold filter criteria
-  const [filters, setFilters] = useState({});
-  // State to manage current page and pagination
+  const [filters, setFilters] = useState({
+    expression: "",
+    isValid: "",
+    output: "",
+    createdOn: "",
+    id: "", // ID filter
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  // State to manage which search inputs are active
   const [searchStates, setSearchStates] = useState({
     expression: false,
     isValid: false,
     output: false,
     createdOn: false,
+    id: false, // ID search input state
   });
 
-  // Fetch logs when the component mounts or refresh is triggered
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -43,36 +43,55 @@ const NewLogTable = ({ refresh, onDelete }) => {
     fetchLogs();
   }, [refresh]);
 
-  // Filter logs based on the current filters
   useEffect(() => {
-    const filtered = allLogs.filter((log) =>
-      Object.keys(filters).every((key) => {
+    console.log("Applying filters:", filters);
+
+    const filtered = allLogs.filter((log) => {
+      return Object.keys(filters).every((key) => {
         if (!filters[key]) return true;
+
+        const logValue =
+          key === "id"
+            ? typeof log._id === "string"
+              ? log._id
+              : ""
+            : log[key];
+
+        console.log(`Filtering by ${key}:`, logValue);
+
+        // Ensure logValue is a string for filtering
+        const logValueStr = (logValue || "").toString().toLowerCase();
+        const filterValue = (filters[key] || "").toLowerCase();
+
         if (key === "isValid") {
-          return log[key] === (filters[key] === "yes" ? true : false);
+          // Convert boolean `isValid` to "yes" or "no" and compare
+          const logIsValid = log[key] ? "yes" : "no";
+          return logIsValid.includes(filterValue);
         }
         if (key === "output") {
-          const filterValue = parseFloat(filters[key]);
-          const logValue = parseFloat(log[key]);
-          return !isNaN(filterValue)
-            ? logValue === filterValue
-            : (log[key] || "").toLowerCase().includes(filters[key]);
+          // Handle case for numerical and string values
+          const filterValueNum = parseFloat(filterValue);
+          const logValueNum = parseFloat(logValueStr);
+          return !isNaN(filterValueNum)
+            ? logValueNum === filterValueNum
+            : logValueStr.includes(filterValue);
         }
         if (key === "createdOn") {
-          const filterValue = filters[key];
-          const logDate = new Date(log[key]);
-          const logDateStr = logDate.toLocaleDateString();
-          return logDateStr.includes(filterValue);
+          const filterValueDateTime = filterValue;
+          const logDateTime = new Date(log[key]);
+          const logDateTimeStr = logDateTime.toLocaleString(); // Includes date and time
+          return logDateTimeStr.includes(filterValueDateTime);
         }
-        return (log[key] || "").toString().toLowerCase().includes(filters[key]);
-      })
-    );
+        return logValueStr.includes(filterValue);
+      });
+    });
+
+    console.log("Filtered logs:", filtered);
     setLogs(filtered);
     setTotal(filtered.length);
     setCurrentPage(1);
   }, [filters, allLogs]);
 
-  // Handle changes to filter inputs
   const handleFilterChange = (value, key) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -80,7 +99,6 @@ const NewLogTable = ({ refresh, onDelete }) => {
     }));
   };
 
-  // Handle log deletion
   const handleDelete = async () => {
     try {
       await axios.delete("http://localhost:8080/api/logs", {
@@ -95,12 +113,11 @@ const NewLogTable = ({ refresh, onDelete }) => {
     }
   };
 
-  // Handle page changes for pagination
   const handlePageChange = (page) => {
+    if (page < 1 || page > Math.ceil(total / pageSize)) return;
     setCurrentPage(page);
   };
 
-  // Handle selection of all rows on the current page
   const handleSelectAll = (e) => {
     const checked = e.target.checked;
     const newSelectedRowKeys = checked
@@ -109,7 +126,6 @@ const NewLogTable = ({ refresh, onDelete }) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
 
-  // Handle individual row selection
   const handleCheckboxChange = (e, logId) => {
     const checked = e.target.checked;
     const newSelectedRowKeys = checked
@@ -118,22 +134,19 @@ const NewLogTable = ({ refresh, onDelete }) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
 
-  // Get logs for the current page
   const paginatedLogs = logs.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
-  // Calculate total number of pages for pagination
   const totalPages = Math.ceil(total / pageSize);
   const pageNumbers = [];
   for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
 
-  // Determine which page numbers to display in pagination
   const getVisiblePageNumbers = () => {
-    const maxPagesToShow = 5; // Number of page buttons to display at once
+    const maxPagesToShow = 5;
     const pages = [];
     const halfMaxPages = Math.floor(maxPagesToShow / 2);
     let start = Math.max(1, currentPage - halfMaxPages);
@@ -160,7 +173,6 @@ const NewLogTable = ({ refresh, onDelete }) => {
     return pages;
   };
 
-  // Toggle the visibility of search input fields
   const toggleSearchInput = (key) => {
     setSearchStates((prev) => ({
       ...Object.keys(prev).reduce((acc, currentKey) => {
@@ -193,6 +205,25 @@ const NewLogTable = ({ refresh, onDelete }) => {
                   paginatedLogs.length > 0
                 }
               />
+            </th>
+            <th>
+              ID
+              <div
+                className={`search-container ${
+                  searchStates.id ? "active" : ""
+                }`}
+              >
+                <FaSearch
+                  className="search-icon"
+                  onClick={() => toggleSearchInput("id")}
+                />
+                {searchStates.id && (
+                  <input
+                    placeholder="Filter by ID"
+                    onChange={(e) => handleFilterChange(e.target.value, "_id")}
+                  />
+                )}
+              </div>
             </th>
             <th>
               Expression
@@ -228,7 +259,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
                 />
                 {searchStates.isValid && (
                   <input
-                    placeholder="Filter (yes/no)"
+                    placeholder="Filter by Valid"
                     onChange={(e) =>
                       handleFilterChange(e.target.value, "isValid")
                     }
@@ -258,7 +289,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
               </div>
             </th>
             <th>
-              Created
+              Created On
               <div
                 className={`search-container ${
                   searchStates.createdOn ? "active" : ""
@@ -270,7 +301,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
                 />
                 {searchStates.createdOn && (
                   <input
-                    placeholder="Filter (e.g., 8/13)"
+                    placeholder="Filter"
                     onChange={(e) =>
                       handleFilterChange(e.target.value, "createdOn")
                     }
@@ -281,59 +312,56 @@ const NewLogTable = ({ refresh, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          {paginatedLogs.map((log) => (
-            <tr key={log._id}>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedRowKeys.includes(log._id)}
-                  onChange={(e) => handleCheckboxChange(e, log._id)}
-                />
-              </td>
-              <td>{log.expression}</td>
-              <td>{log.isValid ? "Yes" : "No"}</td>
-              <td>{log.output}</td>
-              <td>{new Date(log.createdOn).toLocaleString()}</td>
+          {paginatedLogs.length > 0 ? (
+            paginatedLogs.map((log) => (
+              <tr key={log._id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedRowKeys.includes(log._id)}
+                    onChange={(e) => handleCheckboxChange(e, log._id)}
+                  />
+                </td>
+                <td>{log._id}</td>
+                <td>{log.expression}</td>
+                <td>{log.isValid ? "Yes" : "No"}</td>
+                <td>{log.output}</td>
+                <td>{new Date(log.createdOn).toLocaleString()}</td>{" "}
+                {/* Updated to include time */}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6">No logs found</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
       <div className="pagination">
-        <button
-          onClick={() => handlePageChange(1)}
-          disabled={currentPage === 1}
-        >
-          First
-        </button>
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
           Previous
         </button>
-        {getVisiblePageNumbers().map((page, index) => (
-          <div
-            key={index}
-            className={`page-number ${page === currentPage ? "active" : ""}`}
-          >
-            {page === "..." ? (
-              <span>{page}</span>
-            ) : (
-              <button onClick={() => handlePageChange(page)}>{page}</button>
-            )}
-          </div>
-        ))}
+        {getVisiblePageNumbers().map((page, index) =>
+          page === "..." ? (
+            <span key={index}>...</span>
+          ) : (
+            <button
+              key={index}
+              onClick={() => handlePageChange(page)}
+              className={currentPage === page ? "active" : ""}
+            >
+              {page}
+            </button>
+          )
+        )}
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
           Next
-        </button>
-        <button
-          onClick={() => handlePageChange(totalPages)}
-          disabled={currentPage === totalPages}
-        >
-          Last
         </button>
       </div>
     </div>

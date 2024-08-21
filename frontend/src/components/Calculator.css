@@ -13,7 +13,7 @@ body {
   padding: 15px;
   max-width: 300px;
   height: 100%; /* Adjust the height as needed */
-  margin-top: 50px
+  margin-top: 50px;
 }
 
 .display {
@@ -61,6 +61,7 @@ body {
   display: flex;
   width: auto;
   gap: 10px;
+  margin-right: 180px;
 }
 
 .logtable {
