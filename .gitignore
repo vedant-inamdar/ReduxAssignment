@@ -9,9 +9,3 @@ backend/*.log
 # Ignore environment files
 frontend/.env
 backend/.env
-
-# Ignore package.json and package-lock.json files
-frontend/package.json
-frontend/package-lock.json
-backend/package.json
-backend/package-lock.json
