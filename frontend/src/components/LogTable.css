@@ -3,7 +3,7 @@
   margin: 20px;
   font-family: Arial, sans-serif;
   position: relative;
-  width: 135%; /* Adjust this if needed */
+  width: 124%; /* Adjust this if needed */
 }
 
 /* Table styling */
@@ -38,7 +38,7 @@ tbody tr:hover {
 
 /* Actions and pagination styling */
 .actions {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;

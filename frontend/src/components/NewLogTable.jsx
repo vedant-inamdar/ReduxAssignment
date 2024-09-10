@@ -1,3 +1,5 @@
+//User specific-logs
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaSearch } from "react-icons/fa";
@@ -25,6 +27,8 @@ const NewLogTable = ({ refresh, onDelete }) => {
     id: false, // ID search input state
   });
 
+  const getToken = () => localStorage.getItem("token");
+
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -32,6 +36,9 @@ const NewLogTable = ({ refresh, onDelete }) => {
           params: {
             page: 1,
             limit: 10000,
+          },
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
           },
         });
         setAllLogs(res.data.logs || []);
@@ -44,8 +51,6 @@ const NewLogTable = ({ refresh, onDelete }) => {
   }, [refresh]);
 
   useEffect(() => {
-    console.log("Applying filters:", filters);
-
     const filtered = allLogs.filter((log) => {
       return Object.keys(filters).every((key) => {
         if (!filters[key]) return true;
@@ -57,19 +62,14 @@ const NewLogTable = ({ refresh, onDelete }) => {
               : ""
             : log[key];
 
-        console.log(`Filtering by ${key}:`, logValue);
-
-        // Ensure logValue is a string for filtering
         const logValueStr = (logValue || "").toString().toLowerCase();
         const filterValue = (filters[key] || "").toLowerCase();
 
         if (key === "isValid") {
-          // Convert boolean `isValid` to "yes" or "no" and compare
           const logIsValid = log[key] ? "yes" : "no";
           return logIsValid.includes(filterValue);
         }
         if (key === "output") {
-          // Handle case for numerical and string values
           const filterValueNum = parseFloat(filterValue);
           const logValueNum = parseFloat(logValueStr);
           return !isNaN(filterValueNum)
@@ -79,14 +79,13 @@ const NewLogTable = ({ refresh, onDelete }) => {
         if (key === "createdOn") {
           const filterValueDateTime = filterValue;
           const logDateTime = new Date(log[key]);
-          const logDateTimeStr = logDateTime.toLocaleString(); // Includes date and time
+          const logDateTimeStr = logDateTime.toLocaleString();
           return logDateTimeStr.includes(filterValueDateTime);
         }
         return logValueStr.includes(filterValue);
       });
     });
 
-    console.log("Filtered logs:", filtered);
     setLogs(filtered);
     setTotal(filtered.length);
     setCurrentPage(1);
@@ -103,6 +102,9 @@ const NewLogTable = ({ refresh, onDelete }) => {
     try {
       await axios.delete("http://localhost:8080/api/logs", {
         data: { ids: selectedRowKeys },
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
       });
       setSelectedRowKeys([]);
       alert("Logs deleted successfully");
@@ -323,6 +325,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
                   />
                 </td>
                 <td>{log._id}</td>
+                {/* <td>{log.userId}</td> */}
                 <td>{log.expression}</td>
                 <td>{log.isValid ? "Yes" : "No"}</td>
                 <td>{log.output}</td>

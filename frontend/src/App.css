@@ -1,0 +1,16 @@
+:root {
+  --app-primary-color: white; /* Default primary color */
+  --app-secondary-color: white; /* Default secondary color */
+}
+
+body {
+  background-color: var(--app-secondary-color);
+}
+
+.header {
+  background-color: var(--app-primary-color);
+}
+
+.calculator-container {
+  background-color: var(--app-secondary-color);
+}

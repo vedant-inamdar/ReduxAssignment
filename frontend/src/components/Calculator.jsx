@@ -4,57 +4,66 @@ import "./Calculator.css";
 import NewLogTable from "./NewLogTable";
 
 const Calculator = () => {
-  // State to manage the current expression displayed on the calculator
   const [expression, setExpression] = useState("");
-  // State to trigger a refresh of the logs in NewLogTable component
   const [refreshLogs, setRefreshLogs] = useState(false);
 
-  // Function to handle button clicks
+  const getToken = () => localStorage.getItem("token");
+
   const handleClick = (value) => {
     if (!isNaN(value) || value === ".") {
-      // If the value is a number or a decimal point, add it to the expression
       setExpression((prev) => prev + value);
     } else if (value === "AC") {
-      // If "AC" is clicked, clear the expression
       setExpression("");
     } else if (value === "DEL") {
-      // If "DEL" is clicked, remove the last character from the expression
       setExpression((prev) => prev.slice(0, -1));
     } else if (value === "=") {
-      // If "=" is clicked, evaluate the expression
       evaluate();
     } else {
-      // If an operator is clicked and the last character is a number, add the operator
       if (expression && !isNaN(expression.slice(-1))) {
         setExpression((prev) => prev + value);
       }
     }
   };
 
-  // Function to evaluate the expression and handle API calls
   const evaluate = async () => {
     try {
-      // Evaluate the expression using JavaScript's eval function
       const res = eval(expression);
-      setExpression(res.toString()); // Update the expression with the result
-      // Log the valid expression and result to the backend
-      await axios.post("http://localhost:8080/api/logs", {
-        expression: expression,
-        isValid: true,
-        output: res,
-      });
-      // Trigger a refresh of the logs in NewLogTable component
+      setExpression(res.toString());
+
+      // Post result to backend with JWT token
+      await axios.post(
+        "http://localhost:8080/api/logs",
+        {
+          expression: expression,
+          isValid: true,
+          output: res,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+
       setRefreshLogs((prev) => !prev);
     } catch (error) {
-      // If there's an error in evaluation, display "Error"
       setExpression("Error");
-      // Log the invalid expression attempt to the backend
-      await axios.post("http://localhost:8080/api/logs", {
-        expression: expression,
-        isValid: false,
-        output: null,
-      });
-      // Trigger a refresh of the logs in NewLogTable component
+
+      // Post error log to backend with JWT token
+      await axios.post(
+        "http://localhost:8080/api/logs",
+        {
+          expression: expression,
+          isValid: false,
+          output: null,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+
       setRefreshLogs((prev) => !prev);
     }
   };
@@ -63,7 +72,6 @@ const Calculator = () => {
     <div className="holder">
       <div className="calculator">
         <div className="display">
-          {/* Display the current expression */}
           <input
             type="text"
             className="display-input"
@@ -72,7 +80,6 @@ const Calculator = () => {
           />
         </div>
         <div className="buttons">
-          {/* Calculator buttons with onClick handlers */}
           <button className="button operator" onClick={() => handleClick("AC")}>
             AC
           </button>
@@ -142,7 +149,6 @@ const Calculator = () => {
         </div>
       </div>
       <div className="logtable">
-        {/* NewLogTable component to display and manage logs */}
         <NewLogTable
           refresh={refreshLogs}
           onDelete={() => setRefreshLogs((prev) => !prev)}

@@ -1,0 +1,133 @@
+.signin-container {
+  max-width: 30%;
+  margin: 0 auto;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #f9f9f9;
+  border-radius: 9px;
+  transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sign-main {
+  padding-top: 2%;
+}
+
+.signin-container:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  font-size: 24px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.form-group.horizontal {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+}
+
+.form-group.inline {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.form-group.inline label {
+  width: 30%;
+  margin-right: 21px;
+}
+
+.form-group.inline input {
+  width: 70%;
+}
+
+label {
+  display: flex;
+  align-items: center;
+  color: black;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 15px;
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.2);
+  outline: none;
+}
+
+.register {
+  width: 100%;
+  padding: 10px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+  margin-top: 10px;
+}
+
+.register:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
+.register:active {
+  background-color: #1e7e34;
+  transform: translateY(0);
+}
+
+.already {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+  margin-top: 10px;
+}
+
+.already:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.already:active {
+  background-color: #004494;
+  transform: translateY(0);
+}
+
+.error {
+  color: #d9534f;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.success {
+  color: #5bc0de;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 12px;
+}
