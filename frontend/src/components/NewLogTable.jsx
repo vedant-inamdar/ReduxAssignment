@@ -315,7 +315,7 @@ const NewLogTable = ({ refresh, onDelete }) => {
         </thead>
         <tbody>
           {paginatedLogs.length > 0 ? (
-            paginatedLogs.map((log) => (
+            paginatedLogs.map((log, index) => (
               <tr key={log._id}>
                 <td>
                   <input
@@ -324,8 +324,9 @@ const NewLogTable = ({ refresh, onDelete }) => {
                     onChange={(e) => handleCheckboxChange(e, log._id)}
                   />
                 </td>
-                <td>{log._id}</td>
+                {/* <td>{log._id}</td> */}
                 {/* <td>{log.userId}</td> */}
+                <td>{index + 1}</td>
                 <td>{log.expression}</td>
                 <td>{log.isValid ? "Yes" : "No"}</td>
                 <td>{log.output}</td>
